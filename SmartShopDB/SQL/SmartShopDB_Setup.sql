@@ -3,6 +3,8 @@
 -- =======================================================
 IF DB_ID('SmartShopDB') IS NOT NULL
 BEGIN
+    -- force disconnect any users so the drop will succeed
+    ALTER DATABASE SmartShopDB SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
     DROP DATABASE SmartShopDB;
 END
 GO
@@ -17,11 +19,23 @@ GO
 USE SmartShopDB;
 GO
 
+--================================================================
+-- make sure existing tables are removed before attempting to create
+--================================================================
+IF OBJECT_ID('dbo.Order_Items','U') IS NOT NULL DROP TABLE dbo.Order_Items;
+IF OBJECT_ID('dbo.Payments','U') IS NOT NULL DROP TABLE dbo.Payments;
+IF OBJECT_ID('dbo.Orders','U') IS NOT NULL DROP TABLE dbo.Orders;
+IF OBJECT_ID('dbo.Products','U') IS NOT NULL DROP TABLE dbo.Products;
+IF OBJECT_ID('dbo.Customers','U') IS NOT NULL DROP TABLE dbo.Customers;
+IF OBJECT_ID('dbo.Branches','U') IS NOT NULL DROP TABLE dbo.Branches;
+GO
+
 -- =======================================================
 -- STEP 2: Create Tables
 -- =======================================================
 
 -- Branches Table
+-- (table dropped above if it already existed)
 CREATE TABLE dbo.Branches (
     branch_id INT PRIMARY KEY IDENTITY(1,1),
     branch_name VARCHAR(100) NOT NULL,
@@ -97,6 +111,8 @@ GO
 -- =======================================================
 
 -- Branches
+-- clear any existing sample rows before inserting
+DELETE FROM dbo.Branches;
 INSERT INTO dbo.Branches (branch_name, location, manager_name)
 VALUES 
 ('Colombo Central', 'Colombo', 'Nimal Perera'),
@@ -105,6 +121,7 @@ VALUES
 GO
 
 -- Customers
+DELETE FROM dbo.Customers;
 INSERT INTO dbo.Customers (first_name, last_name, email, phone, address)
 VALUES
 ('Kasun', 'Fernando', 'kasun@email.com', '0771234567', 'Colombo'),
@@ -113,6 +130,7 @@ VALUES
 GO
 
 -- Products
+DELETE FROM dbo.Products;
 INSERT INTO dbo.Products (product_name, category, price, stock_quantity, branch_id)
 VALUES
 ('Laptop', 'Electronics', 250000, 10, 1),
@@ -122,6 +140,7 @@ VALUES
 GO
 
 -- Orders
+DELETE FROM dbo.Orders;
 INSERT INTO dbo.Orders (customer_id, branch_id, total_amount, order_type)
 VALUES
 (1, 1, 265000, 'In-Store'),
@@ -130,6 +149,7 @@ VALUES
 GO
 
 -- Order Items
+DELETE FROM dbo.Order_Items;
 INSERT INTO dbo.Order_Items (order_id, product_id, quantity, unit_price, subtotal)
 VALUES
 (1, 1, 1, 250000, 250000),
@@ -139,6 +159,7 @@ VALUES
 GO
 
 -- Payments
+DELETE FROM dbo.Payments;
 INSERT INTO dbo.Payments (order_id, payment_method, payment_amount, payment_status)
 VALUES
 (1, 'Credit Card', 265000, 'Completed'),
